@@ -1,16 +1,15 @@
-from .cursors import ReadOnlyTabCursor
+from .cursors import IOCursor
 
 
 def find_frets(staff, guitar):
-    tape = ReadOnlyTabCursor(staff=staff, guitar=guitar)
-    output_tape = []
+    tape = IOCursor(staff=staff, guitar=guitar)
     while not tape.after_end():
-        output_tape.append(find_multi_fingering(
+        tape.current_output = find_multi_fingering(
             frets_matrix=tape.get_all_frets(),
             guitar=guitar,
-        ))
+        )
         tape.to_right()
-    return output_tape
+    return tape.output_tape
 
 
 def find_multi_fingering(frets_matrix, *, guitar):

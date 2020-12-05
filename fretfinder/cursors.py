@@ -69,3 +69,31 @@ class ReadOnlyTabCursor(StaffCursor):
 
     def at_possible_note(self):
         return self.at_note() and not self.has_impossible_note()
+
+
+class IOCursor(ReadOnlyTabCursor):
+    """ReadOnlyTabCursor with an extra output tape of string numbers.
+
+    The output is a list of lists of integers
+    whose shape is the same of the staff.simnotes
+    (i.e., one output for each input note),
+    and the default/starting value for all entries is ``-1''.
+    """
+
+    def __init__(self, staff, guitar):
+        super().__init__(staff, guitar)
+        self._output_tape = {}
+
+    @property
+    def current_output(self):
+        return self._output_tape.get(self._pos,
+                                     [-1] * len(self.get_simnotes()))
+
+    @current_output.setter
+    def current_output(self, value):
+        self._output_tape[self._pos] = value
+
+    @property
+    def output_tape(self):
+        return [self._output_tape.get(idx, [-1] * len(simnotes))
+                for idx, simnotes in enumerate(self.staff.simnotes)]
