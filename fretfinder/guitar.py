@@ -30,3 +30,6 @@ class Guitar:
         self.num_strings = len(self.strings)
         self.min_fret = min_fret
         self.max_fret = max_fret
+
+    def midi2frets(self, midi):
+        return [midi - ref for ref in self.midi]

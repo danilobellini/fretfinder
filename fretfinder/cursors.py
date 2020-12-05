@@ -40,3 +40,32 @@ class StaffCursor:
 
     def at_chord(self):
         return not self.after_end() and len(self.get_simnotes()) >= 2
+
+
+class ReadOnlyTabCursor(StaffCursor):
+    """StaffCursor that access the staff contents as guitar frets
+    found from using a fretfinder.guitar.Guitar instance.
+    """
+
+    def __init__(self, staff, guitar):
+        super().__init__(staff)
+        self.guitar = guitar
+
+    def get_frets(self, index=0):
+        """List of fret numbers for the note in the given index."""
+        return self.guitar.midi2frets(self[index])
+
+    def get_all_frets(self):
+        """List of fret numbers for all notes of the given chord."""
+        return [self.guitar.midi2frets(note) for note in self.get_simnotes()]
+
+    def has_impossible_note(self):
+        """Checks if all notes of the current position
+        can be played by some string (perhaps not all at once).
+        """
+        return not all(any(self.guitar.min_fret <= fret <= self.guitar.max_fret
+                           for fret in note_frets)
+                       for note_frets in self.get_all_frets())
+
+    def at_possible_note(self):
+        return self.at_note() and not self.has_impossible_note()
