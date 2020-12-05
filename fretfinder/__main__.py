@@ -1,3 +1,4 @@
+from .algorithm import find_frets
 from .guitar import Guitar, DEFAULT_TUNINGS
 from .score import Staff
 
@@ -30,9 +31,11 @@ import click
 )
 @click.argument("staff", type=Staff)
 def main(*, tuning, min_fret, max_fret, staff):
-    guitar = Guitar(tuning, min_fret=min_fret, max_fret=max_fret)
-    click.echo(guitar.midi)
-    click.echo(staff.simnotes)
+    result = find_frets(
+        staff=staff,
+        guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
+    )
+    print(result)
 
 
 if __name__ == "__main__":
