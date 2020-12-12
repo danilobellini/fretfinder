@@ -110,14 +110,25 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
         self.min_x, self.max_x = self.get_valid_range()
 
     def get_valid_range(self):
-        min_w = self.guitar.max_fret
-        max_w = self.guitar.min_fret
-        for fret in self.fret_history[-self.window_size:]:
-            min_w = min(min_w, fret)
-            max_w = max(max_w, fret)
-        min_x = max(max_w - self.dist_range, self.guitar.min_fret)
-        max_x = min(min_w + self.dist_range, self.guitar.max_fret)
-        return min_x, max_x
+        return get_valid_fret_range(
+            history=self.fret_history[-self.window_size:],
+            dist_range=self.dist_range,
+            guitar=self.guitar,
+        )
+
+
+def get_valid_fret_range(history, *, dist_range, guitar):
+    """Find the ``(min_x, max_x)`` fret range for allowed fingerings
+    from a given history (i.e., list) of fret numbers.
+    """
+    min_w = guitar.max_fret
+    max_w = guitar.min_fret
+    for fret in history:
+        min_w = min(min_w, fret)
+        max_w = max(max_w, fret)
+    min_x = max(max_w - dist_range, guitar.min_fret)
+    max_x = min(min_w + dist_range, guitar.max_fret)
+    return min_x, max_x
 
 
 def find_multi_fingering(frets_matrix, *, guitar):
