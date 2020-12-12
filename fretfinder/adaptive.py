@@ -16,6 +16,36 @@ StateHandlerResult = namedtuple(
 
 
 class AdaptiveAlgorithm:
+    """Abstract adaptive algorithm implementation.
+
+    The initial state should be a string in the "state" attribute
+    of either the concrete class or the automaton/algorithm instance.
+    States are "parametrized" in order to allow a family of states
+    to be grouped together in a more compact way,
+    the state parameters, if any,
+    should be in the ``states_args`` attribute.
+
+    The "accept" and "reject" states are implicitly implemented,
+    the other valid initial states must be implemented
+    in the concrete class or in an instance.
+    State handlers should be pure functions (methods)
+    receiving ``self`` and the ``states_arg`` as positional parameters.
+    All handlers must always return a ``StateHandlerResult`` instance.
+    The initial state handlers of every instance
+    should be defined in the concrete class
+    as a method with a ``@AAStateHandler`` decorator.
+
+    Any changes to the "automaton" (any storage attribute in ``self``)
+    should be performed only by some adaptive action.
+    One can register/remove/include/modify state handlers
+    while an instance is running
+    by changing the concrete class' ``state_handlers`` dictionary.
+    Likewise, adaptive actions are functions (methods)
+    registered in the ``adaptive_actions`` dictionary,
+    which can also be changed,
+    and the initial ones should be implemented in the concrete class
+    by using the ``@AdaptiveAction`` decorator.
+    """
     state = "reject"
     state_args = tuple()
 
