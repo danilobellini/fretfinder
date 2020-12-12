@@ -9,13 +9,15 @@ StateHandlerResult = namedtuple(
         "adaptive_action_args",
         "direction",
         "next_state",
+        "next_state_args",
     ],
-    defaults=[None, None, tuple(), None, "reject"],
+    defaults=[None, None, tuple(), None, "reject", tuple()],
 )
 
 
 class AdaptiveAlgorithm:
     state = "reject"
+    state_args = tuple()
 
     def __init__(self, tape):
         self.tape = tape
@@ -29,7 +31,7 @@ class AdaptiveAlgorithm:
 
     def step(self):
         state_handler = self.state_handlers[self.state]
-        result = state_handler(self)
+        result = state_handler(self, *self.state_args)
         if result.output is not None:
             self.tape.current_output = result.output
         if result.adaptive_action is not None:
@@ -38,6 +40,7 @@ class AdaptiveAlgorithm:
         if result.direction is not None:
             getattr(self.tape, result.direction)()
         self.state = result.next_state
+        self.state_args = result.next_state_args
 
 
 class AADecorator:
