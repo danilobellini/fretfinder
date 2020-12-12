@@ -5,7 +5,7 @@ from .adaptive import (AAStateHandler, AdaptiveAction, AdaptiveAlgorithm,
 from .cursors import IOCursor
 
 
-def find_frets(staff, guitar, *, window_size=7):
+def find_frets(staff, guitar, *, allow_open=True, window_size=7):
     """Automated guitar fingerings "fret finder"
     based on an adaptive algorithm.
 
@@ -15,6 +15,10 @@ def find_frets(staff, guitar, *, window_size=7):
         The guitar model to be used.
     staff : fretfinder.score.Staff
         The musical staff in which the algorithm should be applied.
+    allow_open : bool
+        Flag to choose if the open string (clamped by a capo or not)
+        should be considered a fingerless note by the algorithm,
+        hence it won't need to be part of the window range.
     window_size : int
         Number of notes of history (previous notes output)
         to define the valid fret range for selecting the string/fret
@@ -34,6 +38,7 @@ def find_frets(staff, guitar, *, window_size=7):
                     tape=tape,
                     guitar=guitar,
                     dist_range=dist_range,
+                    allow_open=allow_open,
                     window_size=window_size,
                 ).run():
                     break  # Finished in an "accept" state
@@ -46,10 +51,12 @@ def find_frets(staff, guitar, *, window_size=7):
 class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     state = "transition"  # Initial state
 
-    def __init__(self, tape, *, guitar, dist_range, window_size=7):
+    def __init__(self, tape, *, guitar, dist_range,
+                 allow_open=True, window_size=7):
         super().__init__(tape)
         self.guitar = guitar
         self.dist_range = dist_range
+        self.allow_open = allow_open
         self.window_size = window_size
         self.fret_history = []
         self.min_x, self.max_x = self.get_valid_range()
@@ -94,7 +101,10 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     def in_valid_range(self, string):
         """This is the "X(i)" function from the paper."""
         fret_number = self.tape.get_frets()[string]
-        return self.min_x <= fret_number <= self.max_x
+        return (
+            (self.min_x <= fret_number <= self.max_x) or
+            (self.allow_open and fret_number == self.guitar.min_fret)
+        )
 
     @AdaptiveAction
     def update_x(self, string):
@@ -111,10 +121,33 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
 
     def get_valid_range(self):
         return get_valid_fret_range(
-            history=self.fret_history[-self.window_size:],
+            history=get_clean_history(
+                frets=self.fret_history,
+                window_size=self.window_size,
+                guitar=self.guitar,
+                allow_open=self.allow_open,
+            ),
             dist_range=self.dist_range,
             guitar=self.guitar,
         )
+
+
+def get_clean_history(frets, *, window_size, guitar, allow_open=True):
+    """Create a list with the last ``window_size`` frets
+    that match the given constraints.
+    The ``frets`` should have the unfiltered history of output frets.
+    See the ``find_frets`` documentation
+    for more information about the remaining parameters.
+    """
+    result = []
+    for fret in reversed(frets):
+        if allow_open and fret == guitar.min_fret:
+            window_size -= 1
+        else:
+            result.append(fret)
+        if len(result) == window_size:
+            break
+    return result
 
 
 def get_valid_fret_range(history, *, dist_range, guitar):

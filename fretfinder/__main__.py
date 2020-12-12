@@ -30,16 +30,25 @@ import click
     help="Biggest fret number available for the guitar.",
 )
 @click.option(
+    "--allow-open/--disallow-open",
+    default=True,
+    show_default=True,
+    help="Flag to choose if open strings should be allowed, i.e., "
+         "if the min-fret value "
+         "should be considered fingerless (open string) or fingered.",
+)
+@click.option(
     "--window-size", "-w",
     default=7,
     show_default=True,
     help="Size of history to be considered by the algorithm.",
 )
 @click.argument("staff", type=Staff)
-def main(*, tuning, min_fret, max_fret, window_size, staff):
+def main(*, tuning, min_fret, max_fret, allow_open, window_size, staff):
     result = find_frets(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
+        allow_open=allow_open,
         window_size=window_size,
     )
     print(result)
