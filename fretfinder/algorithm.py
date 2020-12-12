@@ -5,7 +5,7 @@ from .adaptive import (AAStateHandler, AdaptiveAction, AdaptiveAlgorithm,
 from .cursors import IOCursor
 
 
-def find_frets(staff, guitar):
+def find_frets(staff, guitar, *, window_size=7):
     """Automated guitar fingerings "fret finder"
     based on an adaptive algorithm.
 
@@ -15,6 +15,10 @@ def find_frets(staff, guitar):
         The guitar model to be used.
     staff : fretfinder.score.Staff
         The musical staff in which the algorithm should be applied.
+    window_size : int
+        Number of notes of history (previous notes output)
+        to define the valid fret range for selecting the string/fret
+        of the following note.
     """
     tape = IOCursor(staff=staff, guitar=guitar)
     while not tape.after_end():
@@ -30,6 +34,7 @@ def find_frets(staff, guitar):
                     tape=tape,
                     guitar=guitar,
                     dist_range=dist_range,
+                    window_size=window_size,
                 ).run():
                     break  # Finished in an "accept" state
         else:  # A rest or an impossible note
@@ -41,10 +46,11 @@ def find_frets(staff, guitar):
 class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     state = "transition"  # Initial state
 
-    def __init__(self, tape, *, guitar, dist_range):
+    def __init__(self, tape, *, guitar, dist_range, window_size=7):
         super().__init__(tape)
         self.guitar = guitar
         self.dist_range = dist_range
+        self.window_size = window_size
         self.fret_history = []
         self.min_x, self.max_x = self.get_valid_range()
 
@@ -106,7 +112,7 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     def get_valid_range(self):
         min_w = self.guitar.max_fret
         max_w = self.guitar.min_fret
-        for fret in self.fret_history[-7:]:
+        for fret in self.fret_history[-self.window_size:]:
             min_w = min(min_w, fret)
             max_w = max(max_w, fret)
         min_x = max(max_w - self.dist_range, self.guitar.min_fret)

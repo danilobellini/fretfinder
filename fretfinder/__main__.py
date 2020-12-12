@@ -29,11 +29,18 @@ import click
     show_default=True,
     help="Biggest fret number available for the guitar.",
 )
+@click.option(
+    "--window-size", "-w",
+    default=7,
+    show_default=True,
+    help="Size of history to be considered by the algorithm.",
+)
 @click.argument("staff", type=Staff)
-def main(*, tuning, min_fret, max_fret, staff):
+def main(*, tuning, min_fret, max_fret, window_size, staff):
     result = find_frets(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
+        window_size=window_size,
     )
     print(result)
 
