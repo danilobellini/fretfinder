@@ -38,17 +38,27 @@ import click
          "should be considered fingerless (open string) or fingered.",
 )
 @click.option(
+    "--reverse/--no-reverse", "-r",
+    default=False,
+    show_default=True,
+    help="Flag to choose if the guitar tuning order should be used "
+         "for trial-and-error by the fret finder algorithm, "
+         "or if it should be reversed.",
+)
+@click.option(
     "--window-size", "-w",
     default=7,
     show_default=True,
     help="Size of history to be considered by the algorithm.",
 )
 @click.argument("staff", type=Staff)
-def main(*, tuning, min_fret, max_fret, allow_open, window_size, staff):
+def main(*, tuning, min_fret, max_fret, allow_open, reverse,
+         window_size, staff):
     result = find_frets(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
         allow_open=allow_open,
+        reverse=reverse,
         window_size=window_size,
     )
     print(result)

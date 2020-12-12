@@ -5,7 +5,8 @@ from .adaptive import (AAStateHandler, AdaptiveAction, AdaptiveAlgorithm,
 from .cursors import IOCursor
 
 
-def find_frets(staff, guitar, *, allow_open=True, window_size=7):
+def find_frets(staff, guitar, *, allow_open=True, reverse=False,
+               window_size=7):
     """Automated guitar fingerings "fret finder"
     based on an adaptive algorithm.
 
@@ -19,6 +20,13 @@ def find_frets(staff, guitar, *, allow_open=True, window_size=7):
         Flag to choose if the open string (clamped by a capo or not)
         should be considered a fingerless note by the algorithm,
         hence it won't need to be part of the window range.
+    reverse : bool
+        Choose if it should try to fit the notes in frets
+        first on the leading guitar strings of the tuning (bottom-up),
+        or on the trailing guitar strings (top-down, or reversed).
+        The guitar tuning is usually described
+        from its highest pitched note (also called the "first string")
+        to its lowest pitched note.
     window_size : int
         Number of notes of history (previous notes output)
         to define the valid fret range for selecting the string/fret
@@ -39,6 +47,7 @@ def find_frets(staff, guitar, *, allow_open=True, window_size=7):
                     guitar=guitar,
                     dist_range=dist_range,
                     allow_open=allow_open,
+                    reverse=reverse,
                     window_size=window_size,
                 ).run():
                     break  # Finished in an "accept" state
@@ -52,19 +61,28 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     state = "transition"  # Initial state
 
     def __init__(self, tape, *, guitar, dist_range,
-                 allow_open=True, window_size=7):
+                 allow_open=True, reverse=False, window_size=7):
         super().__init__(tape)
         self.guitar = guitar
         self.dist_range = dist_range
         self.allow_open = allow_open
+        self.reverse = reverse
         self.window_size = window_size
         self.fret_history = []
         self.min_x, self.max_x = self.get_valid_range()
 
+    def get_transition_string_range(self):
+        last_string = self.tape.current_output[0]
+        num_strings = self.guitar.num_strings
+        if not self.reverse:
+            return range(last_string + 1, num_strings)
+        if last_string == -1:
+            return range(num_strings - 1, -1, -1)
+        return range(last_string - 1, -1, -1)
+
     @AAStateHandler
     def transition(self):
-        for string_index in range(self.tape.current_output[0] + 1,
-                                  self.guitar.num_strings):
+        for string_index in self.get_transition_string_range():
             if self.in_valid_range(string_index):
                 return StateHandlerResult(
                     output=[string_index],
