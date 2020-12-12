@@ -6,7 +6,7 @@ from .cursors import IOCursor
 
 
 def find_frets(staff, guitar, *, allow_open=True, reverse=False,
-               window_size=7):
+               window_size=7, distinct_only=False):
     """Automated guitar fingerings "fret finder"
     based on an adaptive algorithm.
 
@@ -31,6 +31,10 @@ def find_frets(staff, guitar, *, allow_open=True, reverse=False,
         Number of notes of history (previous notes output)
         to define the valid fret range for selecting the string/fret
         of the following note.
+    distinct_only : bool
+        Switch to enable/disable a filter
+        to remove consecutive repeated fret numbers
+        from the window history.
     """
     tape = IOCursor(staff=staff, guitar=guitar)
     while not tape.after_end():
@@ -49,6 +53,7 @@ def find_frets(staff, guitar, *, allow_open=True, reverse=False,
                     allow_open=allow_open,
                     reverse=reverse,
                     window_size=window_size,
+                    distinct_only=distinct_only,
                 ).run():
                     break  # Finished in an "accept" state
         else:  # A rest or an impossible note
@@ -61,13 +66,15 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     state = "transition"  # Initial state
 
     def __init__(self, tape, *, guitar, dist_range,
-                 allow_open=True, reverse=False, window_size=7):
+                 allow_open=True, reverse=False,
+                 window_size=7, distinct_only=False):
         super().__init__(tape)
         self.guitar = guitar
         self.dist_range = dist_range
         self.allow_open = allow_open
         self.reverse = reverse
         self.window_size = window_size
+        self.distinct_only = distinct_only
         self.fret_history = []
         self.min_x, self.max_x = self.get_valid_range()
 
@@ -144,24 +151,30 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
                 window_size=self.window_size,
                 guitar=self.guitar,
                 allow_open=self.allow_open,
+                distinct_only=self.distinct_only,
             ),
             dist_range=self.dist_range,
             guitar=self.guitar,
         )
 
 
-def get_clean_history(frets, *, window_size, guitar, allow_open=True):
+def get_clean_history(frets, *, window_size, guitar,
+                      allow_open=True, distinct_only=False):
     """Create a list with the last ``window_size`` frets
     that match the given constraints.
     The ``frets`` should have the unfiltered history of output frets.
     See the ``find_frets`` documentation
     for more information about the remaining parameters.
     """
+    previous = None
     result = []
     for fret in reversed(frets):
+        if distinct_only and fret == previous:
+            continue
         if allow_open and fret == guitar.min_fret:
             window_size -= 1
         else:
+            previous = fret
             result.append(fret)
         if len(result) == window_size:
             break

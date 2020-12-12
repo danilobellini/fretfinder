@@ -51,15 +51,23 @@ import click
     show_default=True,
     help="Size of history to be considered by the algorithm.",
 )
+@click.option(
+    "--distinct-only/--no-distinct-removal", "-d",
+    default=False,
+    show_default=True,
+    help="Choose if consecutive repeated fret numbers in history "
+         "should be seen as just one history entry by the algorithm.",
+)
 @click.argument("staff", type=Staff)
 def main(*, tuning, min_fret, max_fret, allow_open, reverse,
-         window_size, staff):
+         window_size, distinct_only, staff):
     result = find_frets(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
         allow_open=allow_open,
         reverse=reverse,
         window_size=window_size,
+        distinct_only=distinct_only,
     )
     print(result)
 
