@@ -1,3 +1,7 @@
+class FrozenError(Exception):
+    """Attempt to store an output on a frozen cursor position."""
+
+
 class StaffCursor:
     """Tape-like cursor for a fretfinder.score.Staff instance.
 
@@ -83,6 +87,10 @@ class IOCursor(ReadOnlyTabCursor):
     def __init__(self, staff, guitar):
         super().__init__(staff, guitar)
         self._output_tape = {}
+        self._frozen_until = -1
+
+    def freeze_left(self):
+        self._frozen_until = max(self._pos - 1, self._frozen_until)
 
     @property
     def current_output(self):
@@ -91,6 +99,8 @@ class IOCursor(ReadOnlyTabCursor):
 
     @current_output.setter
     def current_output(self, value):
+        if self._pos <= self._frozen_until:
+            raise FrozenError
         self._output_tape[self._pos] = value
 
     @property
