@@ -34,8 +34,8 @@ python -m fretfinder -rt Bass4 -M14 'A3 C4 D4 E4 F4 E4 D4'
 Or, from Python:
 
 ```python
-from fretfinder import find_frets, Guitar, Staff
-find_frets(
+from fretfinder import find_strings, Guitar, Staff
+find_strings(
     staff=Staff("A3 C4 D4 E4 F4 E4 D4"),
     guitar=Guitar("Bass4", max_fret=14),
     reverse=True,

@@ -5,8 +5,8 @@ from .adaptive import (AAStateHandler, AdaptiveAction, AdaptiveAlgorithm,
 from .cursors import IOCursor
 
 
-def find_frets(staff, guitar, *, allow_open=True, reverse=False,
-               window_size=7, distinct_only=False):
+def find_strings(staff, guitar, *, allow_open=True, reverse=False,
+                 window_size=7, distinct_only=False):
     """Automated guitar fingerings "fret finder"
     based on an adaptive algorithm.
 
@@ -35,6 +35,10 @@ def find_frets(staff, guitar, *, allow_open=True, reverse=False,
         Switch to enable/disable a filter
         to remove consecutive repeated fret numbers
         from the window history.
+
+    Returns
+    -------
+    A list of lists with the number of the strings for each input note.
     """
     cursor = IOCursor(staff=staff, guitar=guitar)
     while not cursor.after_end():
@@ -163,7 +167,7 @@ def get_clean_history(frets, *, window_size, guitar,
     """Create a list with the last ``window_size`` frets
     that match the given constraints.
     The ``frets`` should have the unfiltered history of output frets.
-    See the ``find_frets`` documentation
+    See the ``find_strings`` documentation
     for more information about the remaining parameters.
     """
     previous = None

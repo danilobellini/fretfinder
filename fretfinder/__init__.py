@@ -1,4 +1,4 @@
-from .algorithm import find_frets  # noqa
+from .algorithm import find_strings  # noqa
 from .guitar import Guitar  # noqa
 from .score import Staff  # noqa
 

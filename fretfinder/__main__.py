@@ -61,7 +61,7 @@ import click
 @click.argument("staff", type=Staff)
 def main(*, tuning, min_fret, max_fret, allow_open, reverse,
          window_size, distinct_only, staff):
-    result = find_frets(
+    result = find_strings(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
         allow_open=allow_open,
