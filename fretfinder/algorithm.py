@@ -39,6 +39,11 @@ def find_strings(staff, guitar, *, allow_open=True, reverse=False,
     Returns
     -------
     A list of lists with the number of the strings for each input note.
+
+    See Also
+    --------
+    fretfinder.score.Tablature :
+        An alternative way to call this algorithm.
     """
     cursor = IOCursor(staff=staff, guitar=guitar)
     while not cursor.after_end():

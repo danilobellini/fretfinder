@@ -1,6 +1,5 @@
-from .algorithm import find_frets
 from .guitar import Guitar, DEFAULT_TUNINGS
-from .score import Staff
+from .score import Staff, Tablature
 
 import click
 
@@ -61,7 +60,7 @@ import click
 @click.argument("staff", type=Staff)
 def main(*, tuning, min_fret, max_fret, allow_open, reverse,
          window_size, distinct_only, staff):
-    result = find_strings(
+    result = Tablature(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),
         allow_open=allow_open,
@@ -69,7 +68,8 @@ def main(*, tuning, min_fret, max_fret, allow_open, reverse,
         window_size=window_size,
         distinct_only=distinct_only,
     )
-    print(result)
+    terminal_width = click.get_terminal_size()[0]
+    click.echo(result.ascii_tab(width=terminal_width))
 
 
 if __name__ == "__main__":
