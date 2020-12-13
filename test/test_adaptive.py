@@ -10,9 +10,9 @@ class ParenthesesMatcher(AdaptiveAlgorithm):
 
     @AAStateHandler
     def start(self):
-        if self.tape.after_end():
+        if self.cursor.after_end():
             return StateHandlerResult(next_state="accept")
-        char = self.tape.get_simnotes()
+        char = self.cursor.get_simnotes()
         if char == "(":
             new_state_name = object()
             return StateHandlerResult(
@@ -33,9 +33,9 @@ class ParenthesesMatcher(AdaptiveAlgorithm):
     @AdaptiveAction
     def add_state(self, origin_state, new_state_name):
         def new_handler(this):
-            if self.tape.after_end():
+            if self.cursor.after_end():
                 return StateHandlerResult(next_state="reject")
-            char = self.tape.get_simnotes()
+            char = self.cursor.get_simnotes()
             if char == "(":
                 another_state_name = object()
                 return StateHandlerResult(

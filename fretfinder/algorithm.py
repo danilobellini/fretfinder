@@ -36,18 +36,18 @@ def find_frets(staff, guitar, *, allow_open=True, reverse=False,
         to remove consecutive repeated fret numbers
         from the window history.
     """
-    tape = IOCursor(staff=staff, guitar=guitar)
-    while not tape.after_end():
-        if tape.at_chord():
-            tape.current_output = find_multi_fingering(
-                frets_matrix=tape.get_all_frets(),
+    cursor = IOCursor(staff=staff, guitar=guitar)
+    while not cursor.after_end():
+        if cursor.at_chord():
+            cursor.current_output = find_multi_fingering(
+                frets_matrix=cursor.get_all_frets(),
                 guitar=guitar,
             )
-            tape.to_right()
-        elif tape.at_possible_note():
+            cursor.to_right()
+        elif cursor.at_possible_note():
             for dist_range in count(3):
                 if AdaptiveFretFinderMelody(
-                    tape=tape,
+                    cursor=cursor,
                     guitar=guitar,
                     dist_range=dist_range,
                     allow_open=allow_open,
@@ -57,18 +57,18 @@ def find_frets(staff, guitar, *, allow_open=True, reverse=False,
                 ).run():
                     break  # Finished in an "accept" state
         else:  # A rest or an impossible note
-            tape.to_right()
-        tape.freeze_left()  # "Store" the new result
-    return tape.output_tape
+            cursor.to_right()
+        cursor.freeze_left()  # "Store" the new result
+    return cursor.output_tape
 
 
 class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     state = "transition"  # Initial state
 
-    def __init__(self, tape, *, guitar, dist_range,
+    def __init__(self, cursor, *, guitar, dist_range,
                  allow_open=True, reverse=False,
                  window_size=7, distinct_only=False):
-        super().__init__(tape)
+        super().__init__(cursor)
         self.guitar = guitar
         self.dist_range = dist_range
         self.allow_open = allow_open
@@ -79,7 +79,7 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
         self.min_x, self.max_x = self.get_valid_range()
 
     def get_transition_string_range(self):
-        last_string = self.tape.current_output[0]
+        last_string = self.cursor.current_output[0]
         num_strings = self.guitar.num_strings
         if not self.reverse:
             return range(last_string + 1, num_strings)
@@ -110,7 +110,7 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
 
     @AAStateHandler
     def string(self, current_string):
-        if not self.tape.at_possible_note():
+        if not self.cursor.at_possible_note():
             return StateHandlerResult(next_state="accept")
         if self.in_valid_range(current_string):
             return StateHandlerResult(
@@ -125,7 +125,7 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
 
     def in_valid_range(self, string):
         """This is the "X(i)" function from the paper."""
-        fret_number = self.tape.get_frets()[string]
+        fret_number = self.cursor.get_frets()[string]
         return (
             (self.min_x <= fret_number <= self.max_x) or
             (self.allow_open and fret_number == self.guitar.min_fret)
@@ -134,7 +134,7 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
     @AdaptiveAction
     def update_x(self, string):
         """This is the "Ux" adaptive action from the paper."""
-        fret_number = self.tape.get_frets()[string]
+        fret_number = self.cursor.get_frets()[string]
         self.fret_history.append(fret_number)
         self.min_x, self.max_x = self.get_valid_range()
 

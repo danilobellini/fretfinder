@@ -49,8 +49,8 @@ class AdaptiveAlgorithm:
     state = "reject"
     state_args = tuple()
 
-    def __init__(self, tape):
-        self.tape = tape
+    def __init__(self, cursor):
+        self.cursor = cursor
         self.state_handlers = self.state_handlers.copy()
         self.adaptive_actions = self.adaptive_actions.copy()
 
@@ -63,12 +63,12 @@ class AdaptiveAlgorithm:
         state_handler = self.state_handlers[self.state]
         result = state_handler(self, *self.state_args)
         if result.output is not None:
-            self.tape.current_output = result.output
+            self.cursor.current_output = result.output
         if result.adaptive_action is not None:
             adaptive_action = self.adaptive_actions[result.adaptive_action]
             adaptive_action(self, *result.adaptive_action_args)
         if result.direction is not None:
-            getattr(self.tape, result.direction)()
+            getattr(self.cursor, result.direction)()
         self.state = result.next_state
         self.state_args = result.next_state_args
 
