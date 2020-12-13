@@ -22,13 +22,24 @@ while the other has the output
 (the string index where one should play the notes from the input).
 
 
+## Installation
+
+That can be done
+directly from [PyPI](https://pypi.org/project/fretfinder):
+
+```bash
+pip install fretfinder
+```
+
+
 ## Example
 
 It's possible to run the Greensleaves excerpt example from the paper
-with the following terminal command:
+with the following terminal command
+(it also works with `python -m fretfinder`):
 
 ```bash
-python -m fretfinder -rt Bass4 -M14 'A3 C4 D4 E4 F4 E4 D4'
+fretfinder -rt Bass4 -M14 'A3 C4 D4 E4 F4 E4 D4'
 ```
 
 Or, from Python:
