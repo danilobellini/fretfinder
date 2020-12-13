@@ -1,0 +1,4 @@
+include COPYING.txt
+include tests/*.py
+include tox.ini
+include requirements.txt
