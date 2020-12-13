@@ -33,9 +33,6 @@ class StaffCursor:
     def get_simnotes(self):
         return self.staff.simnotes[self._pos]
 
-    def __getitem__(self, index):
-        return self.get_simnotes()[index]
-
     def at_rest(self):
         return not self.after_end() and not self.get_simnotes()
 
@@ -57,7 +54,7 @@ class ReadOnlyTabCursor(StaffCursor):
 
     def get_frets(self, index=0):
         """List of fret numbers for the note in the given index."""
-        return self.guitar.midi2frets(self[index])
+        return self.guitar.midi2frets(self.get_simnotes()[index])
 
     def get_all_frets(self):
         """List of fret numbers for all notes of the given chord."""
