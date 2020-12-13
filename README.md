@@ -34,12 +34,20 @@ python -m fretfinder -rt Bass4 -M14 'A3 C4 D4 E4 F4 E4 D4'
 Or, from Python:
 
 ```python
-from fretfinder import find_strings, Guitar, Staff
-find_strings(
-    staff=Staff("A3 C4 D4 E4 F4 E4 D4"),
-    guitar=Guitar("Bass4", max_fret=14),
-    reverse=True,
-)
+>>> from fretfinder import Tablature, Guitar, Staff
+>>> tab = Tablature(
+...     staff=Staff("A3 C4 D4 E4 F4 E4 D4"),
+...     guitar=Guitar("Bass4", max_fret=14),
+...     reverse=True,
+... )
+>>> tab.strings  # Result of fretfinder.find_strings(...)
+[[2], [1], [1], [0], [0], [0], [1]]
+>>> print(tab.ascii_tab())
+G3|----------9-10-9----||
+D3|----10-12--------12-||
+A2|-12-----------------||
+E2|--------------------||
+
 ```
 
 The guitar tuning is configured using the same syntax of a melody.
