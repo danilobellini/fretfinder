@@ -1,3 +1,5 @@
+import logging
+
 from .guitar import Guitar, DEFAULT_TUNINGS
 from .score import Staff, Tablature
 
@@ -57,9 +59,19 @@ import click
     help="Choose if consecutive repeated fret numbers in history "
          "should be seen as just one history entry by the algorithm.",
 )
+@click.option(
+    "-v", "--verbose",
+    count=True,
+    help="Increase the verbosity level. "
+         "Use twice to show the adaptive algorithm debug information.",
+)
 @click.argument("staff", type=Staff)
 def main(*, tuning, min_fret, max_fret, allow_open, reverse,
-         window_size, distinct_only, staff):
+         window_size, distinct_only, verbose, staff):
+    logging.basicConfig(
+        format="[%(levelname)s %(name)s] %(message)s",
+        level=[logging.WARNING, logging.INFO, logging.DEBUG][min(verbose, 2)],
+    )
     result = Tablature(
         staff=staff,
         guitar=Guitar(tuning, min_fret=min_fret, max_fret=max_fret),

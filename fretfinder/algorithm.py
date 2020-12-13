@@ -1,8 +1,13 @@
 from itertools import count
+import json
+import logging
 
 from .adaptive import (AAStateHandler, AdaptiveAction, AdaptiveAlgorithm,
                        StateHandlerResult)
 from .cursors import IOCursor
+
+
+logger = logging.getLogger("algorithm")
 
 
 def find_strings(staff, guitar, *, allow_open=True, reverse=False,
@@ -52,9 +57,19 @@ def find_strings(staff, guitar, *, allow_open=True, reverse=False,
                 frets_matrix=cursor.get_all_frets(),
                 guitar=guitar,
             )
+            logger.info(json.dumps({
+                "found": "chord",
+                "out": cursor.current_output,
+                "move": "R",
+            }))
             cursor.to_right()
         elif cursor.at_possible_note():
+            logger.info(json.dumps({"found": "melody"}))
             for dist_range in count(3):
+                logger.info(json.dumps({
+                    "processing": "melody",
+                    "dist_range": dist_range,
+                }))
                 if AdaptiveFretFinderMelody(
                     cursor=cursor,
                     guitar=guitar,
@@ -64,8 +79,16 @@ def find_strings(staff, guitar, *, allow_open=True, reverse=False,
                     window_size=window_size,
                     distinct_only=distinct_only,
                 ).run():
+                    logger.info(json.dumps({
+                        "processed": "melody",
+                        "dist_range": dist_range,
+                    }))
                     break  # Finished in an "accept" state
         else:  # A rest or an impossible note
+            logger.info(json.dumps({
+                "found": "rest" if cursor.at_rest() else "unknown",
+                "move": "R",
+            }))
             cursor.to_right()
         cursor.freeze_left()  # "Store" the new result
     return cursor.output_tape
@@ -146,12 +169,21 @@ class AdaptiveFretFinderMelody(AdaptiveAlgorithm):
         fret_number = self.cursor.get_frets()[string]
         self.fret_history.append(fret_number)
         self.min_x, self.max_x = self.get_valid_range()
+        logger.debug(json.dumps({
+            "min_x": self.min_x,
+            "max_x": self.max_x,
+            "fret_number": fret_number,
+        }))
 
     @AdaptiveAction
     def backup_x(self):
         """This is the "Bx" adaptive action from the paper."""
         self.fret_history.pop()
         self.min_x, self.max_x = self.get_valid_range()
+        logger.debug(json.dumps({
+            "min_x": self.min_x,
+            "max_x": self.max_x,
+        }))
 
     def get_valid_range(self):
         return get_valid_fret_range(

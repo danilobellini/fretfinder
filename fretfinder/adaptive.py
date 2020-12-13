@@ -1,5 +1,9 @@
 from collections import namedtuple
+import json
+import logging
 
+
+logger = logging.getLogger("adaptive")
 
 StateHandlerResult = namedtuple(
     "StateHandlerResult",
@@ -13,6 +17,24 @@ StateHandlerResult = namedtuple(
     ],
     defaults=[None, None, tuple(), None, "reject", tuple()],
 )
+StateHandlerResult.to_json = lambda self, **kwargs: json.dumps({
+    k: v
+    for k, v in {
+        **kwargs,
+        "out": None if self.output is None else self.output,
+        "adap":
+            None if self.adaptive_action is None else
+            f"{self.adaptive_action}" +
+            (str(list(self.adaptive_action_args))
+             if self.adaptive_action_args else ""),
+        "move":
+            None if self.direction is None else self.direction[3].upper(),
+        "next":
+            f"{self.next_state}" +
+            (str(list(self.next_state_args)) if self.next_state_args else ""),
+    }.items()
+    if v is not None
+})
 
 
 class AdaptiveAlgorithm:
@@ -53,6 +75,10 @@ class AdaptiveAlgorithm:
         self.cursor = cursor
         self.state_handlers = self.state_handlers.copy()
         self.adaptive_actions = self.adaptive_actions.copy()
+        logger.info(StateHandlerResult(
+            next_state=self.state,
+            next_state_args=self.state_args,
+        ).to_json(initial=True))
 
     def run(self):
         while self.state not in ["accept", "reject"]:
@@ -62,6 +88,7 @@ class AdaptiveAlgorithm:
     def step(self):
         state_handler = self.state_handlers[self.state]
         result = state_handler(self, *self.state_args)
+        logger.info(result.to_json())
         if result.output is not None:
             self.cursor.current_output = result.output
         if result.adaptive_action is not None:
